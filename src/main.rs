@@ -15,13 +15,22 @@
 use risc0_zkvm::{default_prover, ExecutorEnv};
 use wasm_methods::{WASM_INTERP_ELF, WASM_INTERP_ID};
 use std::fs;
+use std::fs::File;
 use serde::{Deserialize, Serialize};
+// use serde_json::*;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct CustomInputs {
     pub function_name: String,
     pub param: i64,
     pub wasm: Vec<u8>,
+}
+
+#[derive(Debug, Deserialize)]
+struct Config {
+    entrypoint: String,
+    argumentTypes: Vec<String>,
+    returnTypes: Vec<String>,
 }
 
 fn run_guest(iters: i64) -> i32 {
@@ -35,6 +44,16 @@ fn run_guest(iters: i64) -> i32 {
             Vec::<u8>::new()
          }
     };
+
+    let mut file = File::open("config.json").expect("Failed to open the file");
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).expect("Failed to read the file");
+
+    let config: Config = serde_json::from_str(&contents).expect("Failed to parse JSON");
+
+    let entrypoint = vec![config.entrypoint];
+    let argument_types = config.argumentTypes;
+    let return_types = config.returnTypes;
 
     let custom_inputs = CustomInputs {
         function_name: String::from("run"),
