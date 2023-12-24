@@ -26,13 +26,12 @@ pub struct GuestInputs  {
     pub argument_types: Vec<String>,
     pub return_types: Vec<String>,
     pub function_inputs: Vec<InputValues>,
-    pub param: i64,
     pub wasm: Vec<u8>,
 }
 
 // for now only supporting u32, u64, i32, i64 because these values are more needed computationally
-#[derive(Debug)]
-enum InputValues {
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum InputValues {
     LongInteger(i64),
     ShortInteger(i32),
     LongUnsignedInteger(u64),
@@ -41,13 +40,12 @@ enum InputValues {
 
 #[derive(Debug, Deserialize)]
 struct Config {
-    entrypoint: String,
     argument_types: Vec<String>,
     return_types: Vec<String>,
     inputs: Vec<String>,
 }
 
-fn run_guest(iters: i64) -> i32 {
+fn run_guest() {
 
     let wasm_file_path = "wasm/run.wasm";
 
@@ -65,7 +63,6 @@ fn run_guest(iters: i64) -> i32 {
 
     let config: Config = serde_json::from_str(&contents).expect("Failed to parse JSON");
 
-    let entrypoint = config.entrypoint;
     let argument_types = config.argument_types;
     let return_types = config.return_types;
     let inputs = config.inputs;
@@ -83,16 +80,14 @@ fn run_guest(iters: i64) -> i32 {
         }
     }
 
-    println!("entrypoint: {:?}", entrypoint);
     println!("argument_types: {:?}", argument_types);
     println!("return_types: {:?}", return_types);
 
     let custom_inputs = GuestInputs {
-        function_name: String::from("run"),
+        function_name: String::from("run"), // entrypoint is run for now
         argument_types,
         return_types,
         function_inputs,
-        param: iters,
         wasm,
     };
 
@@ -112,12 +107,10 @@ fn run_guest(iters: i64) -> i32 {
         "Code you have proven should successfully verify; did you specify the correct image ID?",
     );
 
-    let result: i32 = receipt.journal.decode().unwrap();
-
-    result
+    // let result: i32 = receipt.journal.decode().unwrap();
+    
 }
 
 fn main() {
-    let fib_iters: i64 = 10;
-    let _ = run_guest(fib_iters);
+    run_guest();
 }

@@ -19,30 +19,42 @@ risc0_zkvm::guest::entry!(main);
 
 use risc0_zkvm::guest::env;
 use wasmi::{Caller, Engine, Func, Linker, Module, Store};
-// use core::CustomInputs;
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct CustomInputs {
+pub enum InputValues {
+    LongInteger(i64),
+    ShortInteger(i32),
+    LongUnsignedInteger(u64),
+    ShortUnsignedInteger(u32),
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct GuestInputs  {
     pub function_name: String,
-    pub param: i64,
+    pub argument_types: Vec<String>,
+    pub return_types: Vec<String>,
+    pub function_inputs: Vec<InputValues>,
     pub wasm: Vec<u8>,
 }
 
 pub fn main() {
     let engine = Engine::default();
-    let inputs: CustomInputs = env::read();
+    let inputs: GuestInputs = env::read();
 
     let wasm: Vec<u8> = inputs.wasm;
-    let iters: i64 = inputs.param;
+
+    // for now first value is always i64
+    let input: i64 = match inputs.function_inputs.get(0).unwrap() {
+        InputValues::LongInteger(i) => *i,
+        _ => 0,
+    };
+
     let function_name: String = inputs.function_name;
 
-    // env::log(&format!("wasm: {:?}", wasm));
-    env::log(&format!("iters: {:?}", iters));
+    env::log(&format!("input: {:?}", input));
     env::log(&format!("function_name: {:?}", function_name));
 
-    // Derived from the wasmi example: https://docs.rs/wasmi/0.29.0/wasmi/#example
     let module = Module::new(&engine, &mut &wasm[..]).expect("Failed to create module");
     type HostState = i64;
 
@@ -54,10 +66,10 @@ pub fn main() {
         .start(&mut store)
         .expect("Failed to start");
 
-    let fib = instance // take in i32 and return i32
+    let function_instance = instance // take in i64 and return i64
         .get_typed_func::<i64, i64>(&store, &function_name)
         .expect("Failed to get typed_func");
-    let res = fib.call(&mut store, iters).expect("Failed to call");
-    env::log(&format!("fib {} - {}", iters, res));
+    let res = function_instance.call(&mut store, input).expect("Failed to call");
+    env::log(&format!("fib {} - {}", input, res));
     env::commit(&res);
 }

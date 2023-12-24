@@ -1,5 +1,5 @@
 // don't worry about the types here asc knows this types
-export function fibonacci(n: i64): i64 {
+export function run(n: i64): i64 {
   if (n <= 1) {
     return n;
   }

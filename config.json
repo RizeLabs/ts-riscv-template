@@ -1,9 +1,8 @@
 {
-    "entrypoint": "run",
-    "argumentTypes": [ 
+    "argument_types": [ 
         "i64" 
     ],
-    "returnTypes": [
+    "return_types": [
         "i64"
     ],
     "inputs":[
