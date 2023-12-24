@@ -1,0 +1,9 @@
+{
+    "entrypoint": "run",
+    "argumentTypes": [ 
+        "i64" 
+    ],
+    "returnTypes": [
+        "i64"
+    ]
+}
