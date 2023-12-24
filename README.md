@@ -1,4 +1,4 @@
-# JS-RISCV-Template 
+# TS-RISCV-Template 
 ## Write arbitrary logic in js/ts itself now 
 
 # Usage
