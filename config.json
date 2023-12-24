@@ -5,5 +5,8 @@
     ],
     "returnTypes": [
         "i64"
+    ],
+    "inputs":[
+        "10"
     ]
 }

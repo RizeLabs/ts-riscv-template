@@ -14,23 +14,37 @@
 
 use risc0_zkvm::{default_prover, ExecutorEnv};
 use wasm_methods::{WASM_INTERP_ELF, WASM_INTERP_ID};
-use std::fs;
 use std::fs::File;
-use serde::{Deserialize, Serialize};
-// use serde_json::*;
+use std::fs;
+use std::io::Read; 
+use serde::{Deserialize, Serialize, de::value};
+use serde_json::Result;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct CustomInputs {
+pub struct GuestInputs  {
     pub function_name: String,
+    pub argument_types: Vec<String>,
+    pub return_types: Vec<String>,
+    pub function_inputs: Vec<InputValues>,
     pub param: i64,
     pub wasm: Vec<u8>,
+}
+
+// for now only supporting u32, u64, i32, i64 because these values are more needed computationally
+#[derive(Debug)]
+enum InputValues {
+    LongInteger(i64),
+    ShortInteger(i32),
+    LongUnsignedInteger(u64),
+    ShortUnsignedInteger(u32),
 }
 
 #[derive(Debug, Deserialize)]
 struct Config {
     entrypoint: String,
-    argumentTypes: Vec<String>,
-    returnTypes: Vec<String>,
+    argument_types: Vec<String>,
+    return_types: Vec<String>,
+    inputs: Vec<String>,
 }
 
 fn run_guest(iters: i64) -> i32 {
@@ -51,14 +65,35 @@ fn run_guest(iters: i64) -> i32 {
 
     let config: Config = serde_json::from_str(&contents).expect("Failed to parse JSON");
 
-    let entrypoint = vec![config.entrypoint];
-    let argument_types = config.argumentTypes;
-    let return_types = config.returnTypes;
+    let entrypoint = config.entrypoint;
+    let argument_types = config.argument_types;
+    let return_types = config.return_types;
+    let inputs = config.inputs;
+    let mut function_inputs: Vec<InputValues> = Vec::new();
 
-    let custom_inputs = CustomInputs {
+    for (index, value) in argument_types.iter().enumerate() {
+        let input_type = value.to_string();
+
+        match input_type.as_str() {
+            "i32" => function_inputs.push(InputValues::ShortInteger(inputs[index].parse::<i32>().unwrap())),
+            "i64" => function_inputs.push(InputValues::LongInteger(inputs[index].parse::<i64>().unwrap())),
+            "u32" => function_inputs.push(InputValues::ShortUnsignedInteger(inputs[index].parse::<u32>().unwrap())),
+            "u64" => function_inputs.push(InputValues::LongUnsignedInteger(inputs[index].parse::<u64>().unwrap())),
+            _ => println!("Invalid input type"),
+        }
+    }
+
+    println!("entrypoint: {:?}", entrypoint);
+    println!("argument_types: {:?}", argument_types);
+    println!("return_types: {:?}", return_types);
+
+    let custom_inputs = GuestInputs {
         function_name: String::from("run"),
+        argument_types,
+        return_types,
+        function_inputs,
         param: iters,
-        wasm: wasm,
+        wasm,
     };
 
     println!("custom_inputs: {:?}", custom_inputs);

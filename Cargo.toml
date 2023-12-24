@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 risc0-zkvm = { version = "0.19.1" }
 serde = { version = "1.0", default-features = false }
+serde_json = { version = "1.0"}
 wasm-methods = { path = "methods" }
 wat = "<1.0.72"
 
