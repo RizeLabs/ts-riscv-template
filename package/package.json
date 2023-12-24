@@ -4,6 +4,7 @@
   "description": "A package to write arbitrary ts code for wasm compilation",
   "main": "index.js",
   "scripts": {
+    "compile": "rm -rf ../wasm/* && asc run.ts -o ../wasm/run.wasm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
